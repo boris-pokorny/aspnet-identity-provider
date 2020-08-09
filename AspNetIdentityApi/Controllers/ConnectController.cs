@@ -13,24 +13,35 @@ namespace AspNetIdentityApi.Controllers {
         private readonly ILogger<ConnectController> _logger;
 
         private readonly IUserService _userService;
+
+        private readonly ITokenService _tokenService;
+
         public ConnectController (
             ILogger<ConnectController> logger,
-            IUserService userService) {
+            IUserService userService,
+            ITokenService tokenService
+        ) {
             _logger = logger;
             _userService = userService;
+            _tokenService = tokenService;
         }
 
         [HttpPost ("Token")]
-        public async Task<ActionResult<string>> Token (AuthenticateRequest model) {
+        public async Task<ActionResult<TokenResponse>> Token (AuthenticateRequest model) {
             if (!ModelState.IsValid) {
                 return BadRequest (ModelState.GetErrorMessages ());
             }
-            var token = await _userService.Authenticate (model);
-            if (string.IsNullOrEmpty (token)) {
+            var user = await _userService.Authenticate (model);
+            if (user is null) {
                 return BadRequest (new { message = "Username or password is incorrect" });
             }
-            return Ok (token);
+            var accessToken = _tokenService.GenerateJwtToken (user);
+            var refreshToken = _tokenService.GenerateRefreshToken ();
+            var response = _tokenService.CreateResponse (user, accessToken, refreshToken);
 
+            await _userService.SetTokens (user, accessToken, refreshToken);
+
+            return Ok (response);
         }
     }
 }

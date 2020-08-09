@@ -1,4 +1,4 @@
-# Sample Identity Provider
+# Identity Provider Example
 
 ## Start local db engine
 <code>

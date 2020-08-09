@@ -1,9 +1,7 @@
 using System;
-using System.IO.Abstractions;
 using System.Threading.Tasks;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
-using AspNetIdentityApi.Tests.Helpers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -74,17 +72,9 @@ namespace AspNetIdentityApi.Tests {
 
             var signInManager = new FakeSignInManager ();
             var configuration = new Mock<IConfiguration> ();
-            var configurationSection = new Mock<IConfigurationSection> ();
-            var fs = new Mock<IFileSystem> ();
-            var jwkHelper = new JwkHelper ();
 
-            configurationSection.Setup (a => a.Value).Returns ("tempkey.jwk");
-            configuration.Setup (a => a.GetSection ("JwkFile")).Returns (configurationSection.Object);
-
-            fs.Setup (f => f.File.ReadAllText (It.IsAny<String> ())).Returns (jwkHelper.jsonSerializedKey);
-
-            userService = new UserService (signInManager, configuration.Object, fs.Object);
-            userServiceFail = new UserService (new FakeSignInManagerFailure (), configuration.Object, fs.Object);
+            userService = new UserService (signInManager, configuration.Object);
+            userServiceFail = new UserService (new FakeSignInManagerFailure (), configuration.Object);
         }
 
         [Fact]
@@ -95,8 +85,7 @@ namespace AspNetIdentityApi.Tests {
             };
             var result = await userService.Authenticate (credentials);
 
-            Assert.IsType<string> (result);
-            Assert.Equal (3, result.Split (".").Length);
+            Assert.IsType<ApplicationUser> (result);
         }
 
         [Fact]
