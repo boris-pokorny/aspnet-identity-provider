@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
@@ -35,7 +37,8 @@ namespace AspNetIdentityApi.Tests {
     }
 
     public class FakeUserManager : UserManager<ApplicationUser> {
-        public FakeUserManager () : base (new Mock<IUserAuthenticationTokenStore<ApplicationUser>> ().Object,
+
+        public FakeUserManager () : base (new Mock<IQueryableUserStore<ApplicationUser>> ().Object,
             new Mock<IOptions<IdentityOptions>> ().Object,
             new Mock<IPasswordHasher<ApplicationUser>> ().Object,
             new IUserValidator<ApplicationUser>[0],
@@ -59,6 +62,21 @@ namespace AspNetIdentityApi.Tests {
 
         public override Task<ApplicationUser> FindByNameAsync (string name) {
             return Task.FromResult (new ApplicationUser { Id = "0000-0000-0000-0000" });
+        }
+
+        public override IQueryable<ApplicationUser> Users {
+            get {
+                return new List<ApplicationUser> {
+                    new ApplicationUser {
+                        Tokens = new List<IdentityUserToken<string>> {
+                            new IdentityUserToken<string> {
+                                Value = "token",
+                            }
+                        }
+                        as ICollection<IdentityUserToken<string>>
+                    }
+                }.AsQueryable ();
+            }
         }
 
     }
@@ -97,6 +115,13 @@ namespace AspNetIdentityApi.Tests {
             var result = await userServiceFail.Authenticate (credentials);
 
             Assert.Null (result);
+        }
+
+        [Fact]
+        public void TestHasValidRefreshToken () {
+            var result = userService.HasValidRefreshToken ("token");
+
+            Assert.IsType<ApplicationUser> (result);
         }
     }
 }

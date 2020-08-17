@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AspNetIdentityApi.Extensions;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
@@ -28,13 +29,40 @@ namespace AspNetIdentityApi.Controllers {
 
         [HttpPost ("Token")]
         public async Task<ActionResult<TokenResponse>> Token (AuthenticateRequest model) {
+            ApplicationUser user;
+            EGrantType grantType;
+
             if (!ModelState.IsValid) {
                 return BadRequest (ModelState.GetErrorMessages ());
             }
-            var user = await _userService.Authenticate (model);
-            if (user is null) {
-                return BadRequest (new { message = "Username or password is incorrect" });
+
+            Enum.TryParse (model.GrantType, out grantType);
+
+            switch (grantType) {
+                case EGrantType.client_credentials:
+
+                    user = await _userService.Authenticate (model);
+                    if (user is null) {
+                        return BadRequest (new { message = "Username or password is incorrect" });
+                    }
+                    break;
+
+                case EGrantType.refresh_token:
+                    user = _userService.HasValidRefreshToken (model.RefreshToken);
+                    if (user is null) {
+                        return BadRequest (new { message = "Could not refresh token." });
+                    }
+                    var token = await _userService.GetAccessToken (user);
+                    if (_tokenService.IsRefreshExpired (token)) {
+                        return BadRequest (new { message = "Refresh token expired." });
+                    }
+                    await _userService.RemoveTokens (user);
+                    break;
+
+                default:
+                    return BadRequest ();
             }
+
             var accessToken = _tokenService.GenerateJwtToken (user);
             var refreshToken = _tokenService.GenerateRefreshToken ();
             var response = _tokenService.CreateResponse (user, accessToken, refreshToken);

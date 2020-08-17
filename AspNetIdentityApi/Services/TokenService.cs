@@ -15,6 +15,8 @@ namespace AspNetIdentityApi.Services {
         string GenerateRefreshToken ();
 
         TokenResponse CreateResponse (ApplicationUser user, string accessToken, string refreshToken);
+
+        bool IsRefreshExpired (string token);
     }
 
     public class TokenService : ITokenService {
@@ -23,7 +25,7 @@ namespace AspNetIdentityApi.Services {
 
         private readonly IFileSystem _fileSystem;
 
-        private readonly int _expiresIn;
+        private readonly int _expiresIn, _refreshExpiresIn;
 
         private readonly string _jwkFile;
 
@@ -36,6 +38,7 @@ namespace AspNetIdentityApi.Services {
             _fileSystem = fileSystem;
             _jwkFile = sectionTokens.GetValue<string> ("JwkFile");
             _expiresIn = sectionTokens.GetValue<int> ("ExpiresIn");
+            _refreshExpiresIn = sectionTokens.GetValue<int> ("RefreshExpiresIn");
 
         }
 
@@ -68,6 +71,17 @@ namespace AspNetIdentityApi.Services {
                 token_type = "Bearer"
             };
             return response;
+        }
+
+        public bool IsRefreshExpired (string token) {
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler ();
+
+            JwtSecurityToken securityToken = tokenHandler.ReadJwtToken (token);
+
+            double timeDiff = (DateTime.UtcNow - securityToken.IssuedAt).TotalSeconds;
+
+            return timeDiff > _refreshExpiresIn;
         }
     }
 }

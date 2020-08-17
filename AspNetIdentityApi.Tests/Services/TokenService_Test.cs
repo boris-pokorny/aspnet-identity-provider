@@ -20,14 +20,17 @@ namespace AspNetIdentityApi.Tests {
             var sectionTokens = new Mock<IConfigurationSection> ();
             var sectionJwtFile = new Mock<IConfigurationSection> ();
             var sectionExpiresIn = new Mock<IConfigurationSection> ();
+            var sectionRefreshExpiresIn = new Mock<IConfigurationSection> ();
 
             var fs = new Mock<IFileSystem> ();
             var jwkHelper = new JwkHelper ();
 
             sectionJwtFile.Setup (a => a.Value).Returns ("tempkey.jwk");
             sectionExpiresIn.Setup (a => a.Value).Returns ("3600");
+            sectionRefreshExpiresIn.Setup (a => a.Value).Returns ("0");
             sectionTokens.Setup (a => a.GetSection ("JwkFile")).Returns (sectionJwtFile.Object);
             sectionTokens.Setup (a => a.GetSection ("ExpiresIn")).Returns (sectionExpiresIn.Object);
+            sectionTokens.Setup (a => a.GetSection ("RefreshExpiresIn")).Returns (sectionRefreshExpiresIn.Object);
             configuration.Setup (a => a.GetSection ("Tokens")).Returns (sectionTokens.Object);
 
             fs.Setup (f => f.File.ReadAllText (It.IsAny<String> ())).Returns (jwkHelper.jsonSerializedKey);
@@ -62,6 +65,15 @@ namespace AspNetIdentityApi.Tests {
 
             Assert.IsType<TokenResponse> (response);
             Assert.Equal (3600, response.expires_in);
+        }
+
+        [Fact]
+        public void TestIsRefreshExpired () {
+
+            var user = new ApplicationUser { };
+            var token = _service.GenerateJwtToken (user);
+
+            Assert.True (_service.IsRefreshExpired (token));
         }
     }
 }

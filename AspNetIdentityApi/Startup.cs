@@ -2,6 +2,9 @@ using System.IO.Abstractions;
 using AspNetIdentityApi.Data;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
+using AspNetIdentityApi.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -20,20 +23,22 @@ namespace AspNetIdentityApi {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services) {
-            services.AddControllers ();
 
             services.AddDbContext<ApplicationDbContext> (options =>
                 options.UseNpgsql (Configuration.GetConnectionString ("DefaultConnection")));
+
+            services.AddMvc ().AddFluentValidation (fv => { });
 
             services.AddIdentity<ApplicationUser, IdentityRole> ()
                 .AddEntityFrameworkStores<ApplicationDbContext> ()
                 .AddDefaultTokenProviders ();
 
+            services.AddTransient<IValidator<AuthenticateRequest>, AuthenticateRequestValidator> ();
+
             // configure DI for application services
             services.AddScoped<IUserService, UserService> ();
             services.AddScoped<ITokenService, TokenService> ();
             services.AddScoped<IFileSystem, FileSystem> ();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
