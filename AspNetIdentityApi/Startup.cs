@@ -1,4 +1,7 @@
+using System;
+using System.IO;
 using System.IO.Abstractions;
+using System.Reflection;
 using AspNetIdentityApi.Data;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
@@ -39,6 +42,13 @@ namespace AspNetIdentityApi {
             services.AddScoped<IUserService, UserService> ();
             services.AddScoped<ITokenService, TokenService> ();
             services.AddScoped<IFileSystem, FileSystem> ();
+
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen (c => {
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine (AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments (xmlPath);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,8 +56,12 @@ namespace AspNetIdentityApi {
             if (env.IsDevelopment ()) {
                 app.UseDeveloperExceptionPage ();
             }
-
-            // app.UseHttpsRedirection ();
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger ();
+            // Enable middleware to serve swagger-ui
+            app.UseSwaggerUI (c => {
+                c.SwaggerEndpoint ("/swagger/v1/swagger.json", "Identity API V1");
+            });
 
             app.UseRouting ();
 

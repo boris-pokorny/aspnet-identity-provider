@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AspNetIdentityApi.Controllers {
-    [ApiController]
+    ///Connect  Controller
     [Route ("[controller]")]
     public class ConnectController : ControllerBase {
 
@@ -27,6 +27,9 @@ namespace AspNetIdentityApi.Controllers {
             _tokenService = tokenService;
         }
 
+        /// <summary>
+        /// Generates json web token.
+        /// </summary>
         [HttpPost ("Token")]
         public async Task<ActionResult<TokenResponse>> Token (AuthenticateRequest model) {
             ApplicationUser user;

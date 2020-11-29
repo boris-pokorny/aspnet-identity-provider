@@ -18,6 +18,9 @@ namespace AspNetIdentityApi.Controllers {
             _fileSystem = fileSystem;
         }
 
+        /// <summary>
+        /// Discovers OpenID configuration.
+        /// </summary>
         [HttpGet ("openid-configuration")]
         public IActionResult OpenidConfiguration () {
             var applicationUrl = _configuration.GetValue<string> ("ASPNETCORE_URLS");
@@ -28,6 +31,9 @@ namespace AspNetIdentityApi.Controllers {
             return Ok (response);
         }
 
+        /// <summary>
+        /// Discovers Json web key sets.
+        /// </summary>
         [HttpGet ("openid-configuration/jwks")]
         public IActionResult OpenidConfigurationJwks () {
             var fileName = _configuration.GetValue<string> ("JwkFile");
