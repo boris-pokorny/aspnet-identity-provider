@@ -36,9 +36,9 @@ namespace AspNetIdentityApi.Tests {
         }
     }
 
-    public class FakeUserManager : UserManager<ApplicationUser> {
+    public class FakeUserManager : ApplicationUserManager {
 
-        public FakeUserManager () : base (new Mock<IQueryableUserStore<ApplicationUser>> ().Object,
+        public FakeUserManager () : base (new Mock<IUserEmailStore<ApplicationUser>> ().Object,
             new Mock<IOptions<IdentityOptions>> ().Object,
             new Mock<IPasswordHasher<ApplicationUser>> ().Object,
             new IUserValidator<ApplicationUser>[0],
@@ -122,6 +122,18 @@ namespace AspNetIdentityApi.Tests {
             var result = userService.HasValidRefreshToken ("token");
 
             Assert.IsType<ApplicationUser> (result);
+        }
+
+        [Fact]
+        public async void TestCreateAccount () {
+            var user = new ApplicationUser {
+                UserName = "",
+                Email = "",
+                Id = "210fd6f3-37f9-45ad-b37f-2309b354d31f"
+            };
+            var result = await userService.CreateAccount (user, "");
+
+            Assert.Equal (user.Id, result);
         }
     }
 }

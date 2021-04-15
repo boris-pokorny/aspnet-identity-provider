@@ -16,6 +16,8 @@ namespace AspNetIdentityApi.Services {
         Task<int> SetTokens (ApplicationUser user, string accessToken, string refreshToken);
 
         Task<int> RemoveTokens (ApplicationUser user);
+
+        Task<string> CreateAccount (ApplicationUser user, string password);
     }
 
     public class UserService : IUserService {
@@ -68,6 +70,16 @@ namespace AspNetIdentityApi.Services {
             await userManager.RemoveAuthenticationTokenAsync (user, _tokenProvider, "access_token");
             await userManager.RemoveAuthenticationTokenAsync (user, _tokenProvider, "refresh_token");
             return 0;
+        }
+
+        public async Task<string> CreateAccount (ApplicationUser user, string password) {
+            var userManager = _signInManager.UserManager;
+            var created  = await userManager.CreateAsync(user, password);
+            if (created == IdentityResult.Success) {
+                return user.Id;
+            } else {
+                return null;
+            }
         }
     }
 }

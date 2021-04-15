@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Reflection;
 using AspNetIdentityApi.Data;
+using AspNetIdentityApi.Extensions;
 using AspNetIdentityApi.Models;
 using AspNetIdentityApi.Services;
 using AspNetIdentityApi.Validators;
@@ -32,11 +33,19 @@ namespace AspNetIdentityApi {
 
             services.AddMvc ().AddFluentValidation (fv => { });
 
-            services.AddIdentity<ApplicationUser, IdentityRole> ()
+            services.AddIdentity<ApplicationUser, IdentityRole> (options => {
+                    options.Password.RequiredLength = 6;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireDigit = false;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext> ()
-                .AddDefaultTokenProviders ();
+                .AddDefaultTokenProviders ()
+                .AddUserManager<ApplicationUserManager> ();
 
             services.AddTransient<IValidator<AuthenticateRequest>, AuthenticateRequestValidator> ();
+            services.AddTransient<IValidator<RegistrationRequest>, RegistrationRequestValidator> ();
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService> ();
@@ -49,6 +58,8 @@ namespace AspNetIdentityApi {
                 var xmlPath = Path.Combine (AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments (xmlPath);
             });
+
+            services.AddDataProtection ();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

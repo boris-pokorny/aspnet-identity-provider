@@ -31,7 +31,7 @@ namespace AspNetIdentityApi.Controllers {
         /// Generates json web token.
         /// </summary>
         [HttpPost ("Token")]
-        public async Task<ActionResult<TokenResponse>> Token (AuthenticateRequest model) {
+        public async Task<ActionResult<TokenResponse>> Token ([FromBody] AuthenticateRequest model) {
             ApplicationUser user;
             EGrantType grantType;
 

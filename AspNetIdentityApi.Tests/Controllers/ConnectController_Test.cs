@@ -26,7 +26,6 @@ namespace AspNetIdentityApi.Tests {
             return Response;
         }
         public bool IsRefreshExpired (string token) {
-            Console.WriteLine (token);
             return token == "expired";
         }
     }
