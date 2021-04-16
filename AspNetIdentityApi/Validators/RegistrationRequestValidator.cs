@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using AspNetIdentityApi.Models;
 using FluentValidation;
 
 namespace AspNetIdentityApi.Validators {
 
     public class RegistrationRequestValidator : AbstractValidator<RegistrationRequest> {
-        public ApplicationUserManager _userManager { get; set; }
+        private ApplicationUserManager _userManager { get; set; }
         public RegistrationRequestValidator (ApplicationUserManager userManager) {
 
             _userManager = userManager;
@@ -31,9 +30,7 @@ namespace AspNetIdentityApi.Validators {
             RuleFor (x => x.Password)
                 .Cascade (CascadeMode.Stop)
                 .NotEmpty ()
-                .MustAsync (async (password, cancellation) => {
-
-                    List<string> passwordErrors = new List<string> ();
+                .CustomAsync (async (password, context, cancellation) => {
 
                     var validators = _userManager.PasswordValidators;
 
@@ -42,13 +39,11 @@ namespace AspNetIdentityApi.Validators {
 
                         if (!result.Succeeded) {
                             foreach (var error in result.Errors) {
-                                passwordErrors.Add (error.Description);
+                                context.AddFailure (error.Description);
                             }
                         }
                     }
-                    return passwordErrors.Count == 0;
-                })
-                .WithMessage ("'Password' does not comply with password rules.");
+                });
             RuleFor (x => x.ConfirmPassword)
                 .NotEmpty ()
                 .Must ((x, confirmedPassword) => x.Password == confirmedPassword)

@@ -123,17 +123,19 @@ namespace AspNetIdentityApi.Tests {
 
         [Fact]
         public void TestPasswordRules () {
+            var identityError = new IdentityError { Description = "Error" };
             _userValidator.Setup (a => a.ValidateAsync (_userManager.Object, It.IsAny<ApplicationUser> ()))
                 .Returns (Task.FromResult<IdentityResult> (IdentityResult.Success));
 
             _passwordValidator.Setup (a => a.ValidateAsync (_userManager.Object, null, _request.Password))
-                .Returns (Task.FromResult<IdentityResult> (IdentityResult.Failed (new IdentityError ())));
+                .Returns (Task.FromResult<IdentityResult> (IdentityResult.Failed (identityError, identityError)));
 
             var result = _validator.Validate (_request);
 
             Assert.False (result.IsValid);
-            Assert.Equal (1, result.Errors.Count);
-            Assert.Equal ($"'Password' does not comply with password rules.", result.Errors[0].ErrorMessage);
+            Assert.Equal (2, result.Errors.Count);
+            Assert.Equal (identityError.Description, result.Errors[0].ErrorMessage);
+            Assert.Equal (identityError.Description, result.Errors[1].ErrorMessage);
         }
 
         [Fact]
